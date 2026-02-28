@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拟物化数字键盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        .seven-segment {
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        .skeuo-btn {
+            background: linear-gradient(180deg, #4a4a4a 0%, #353535 50%, #2a2a2a 100%);
+            box-shadow:
+                /* 主外阴影 - 光源左上方，阴影右下 */
+                4px 4px 8px rgba(0,0,0,0.6),
+                2px 2px 4px rgba(0,0,0,0.4),
+                /* 顶部高光 - 模拟光源照射 */
+                inset 0 1px 0 rgba(255,255,255,0.25),
+                /* 底部暗边 */
+                inset 0 -1px 0 rgba(0,0,0,0.4);
+            transition: all 0.08s ease;
+            position: relative;
+        }
+
+        /* 按键边缘斜面效果 */
+        .skeuo-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            /* 径向渐变 - 高光中心在按钮左上角边缘 */
+            background: radial-gradient(circle at 25% 25%, #4a4a4a 0%, #3a3a3a 40%, #252525 65%, #1a1a1a 100%);
+            box-shadow:
+                /* 弧形阴影 - 更多阴影区域 */
+                inset -5px -5px 15px rgba(0,0,0,0.5),
+                inset -3px -3px 8px rgba(0,0,0,0.35),
+                inset -1px -1px 4px rgba(0,0,0,0.2),
+                /* 左上高光中心在边缘 */
+                inset 5px 5px 15px rgba(255,255,255,0.09),
+                inset 3px 3px 8px rgba(255,255,255,0.045);
+        }
+
+        .skeuo-btn span {
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 -1px 1px rgba(0,0,0,0.5);
+        }
+
+        /* 按下状态 - 明显的凹陷效果 */
+        .skeuo-btn:active {
+            transform: translateY(2px);
+            box-shadow:
+                /* 按下时外阴影减弱，更柔和 */
+                2px 2px 5px rgba(0,0,0,0.4),
+                /* 按下时顶部高光减弱，内阴影增强 */
+                inset 0 1px 0 rgba(255,255,255,0.08),
+                inset 0 -1px 0 rgba(0,0,0,0.4),
+                /* 整体内阴影模拟被按入，更轻 */
+                inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .skeuo-btn.active {
+            transform: translateY(2px);
+            box-shadow:
+                2px 2px 5px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.08),
+                inset 0 -1px 0 rgba(0,0,0,0.4),
+                inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .skeuo-btn.active::before {
+            background: radial-gradient(circle at 25% 25%, #4a4a4a 0%, #3a3a3a 40%, #252525 65%, #1a1a1a 100%);
+            box-shadow:
+                inset -5px -5px 15px rgba(0,0,0,0.5),
+                inset -3px -3px 8px rgba(0,0,0,0.35),
+                inset -1px -1px 4px rgba(0,0,0,0.2),
+                inset 5px 5px 15px rgba(255,255,255,0.09),
+                inset 3px 3px 8px rgba(255,255,255,0.045);
+        }
+
+        .skeuo-btn-orange.active {
+            transform: translateY(2px);
+            box-shadow:
+                2px 2px 5px rgba(120,40,15,0.35),
+                inset 0 1px 0 rgba(255,255,255,0.12),
+                inset 0 -1px 0 rgba(80,30,10,0.35),
+                inset 0 2px 4px rgba(80,30,10,0.25);
+        }
+
+        .skeuo-btn-orange.active::before {
+            background: radial-gradient(circle at 25% 25%, #ffa070 0%, #ff7a4a 40%, #d04a1f 65%, #b04015 100%);
+            box-shadow:
+                inset -5px -5px 15px rgba(160,50,20,0.45),
+                inset -3px -3px 8px rgba(140,40,15,0.3),
+                inset -1px -1px 4px rgba(120,30,10,0.18),
+                inset 5px 5px 15px rgba(255,255,255,0.09),
+                inset 3px 3px 8px rgba(255,255,255,0.05);
+        }
+
+        .skeuo-btn:active::before {
+            /* 按下时中间光影保持不变 */
+            background: radial-gradient(circle at 25% 25%, #4a4a4a 0%, #3a3a3a 40%, #252525 65%, #1a1a1a 100%);
+            box-shadow:
+                inset -5px -5px 15px rgba(0,0,0,0.5),
+                inset -3px -3px 8px rgba(0,0,0,0.35),
+                inset -1px -1px 4px rgba(0,0,0,0.2),
+                inset 5px 5px 15px rgba(255,255,255,0.09),
+                inset 3px 3px 8px rgba(255,255,255,0.045);
+        }
+
+        /* 橙色按键 */
+        .skeuo-btn-orange {
+            background: linear-gradient(180deg, #ff8a5a 0%, #e55a2b 50%, #c04a1f 100%);
+            box-shadow:
+                4px 4px 8px rgba(0,0,0,0.5),
+                2px 2px 4px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.35),
+                inset 0 -1px 0 rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .skeuo-btn-orange::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            /* 径向渐变 - 高光中心在按钮左上角边缘 */
+            background: radial-gradient(circle at 25% 25%, #ffa070 0%, #ff7a4a 40%, #d04a1f 65%, #b04015 100%);
+            box-shadow:
+                /* 弧形阴影 - 更多阴影区域 */
+                inset -5px -5px 15px rgba(160,50,20,0.45),
+                inset -3px -3px 8px rgba(140,40,15,0.3),
+                inset -1px -1px 4px rgba(120,30,10,0.18),
+                /* 左上高光中心在边缘 */
+                inset 5px 5px 15px rgba(255,255,255,0.09),
+                inset 3px 3px 8px rgba(255,255,255,0.05);
+        }
+
+        .skeuo-btn-orange:active {
+            transform: translateY(2px);
+            box-shadow:
+                /* 按下后外阴影用深橙色，更柔和 */
+                2px 2px 5px rgba(120,40,15,0.35),
+                /* 按下时顶部高光减弱，内阴影增强 */
+                inset 0 1px 0 rgba(255,255,255,0.12),
+                inset 0 -1px 0 rgba(80,30,10,0.35),
+                inset 0 2px 4px rgba(80,30,10,0.25);
+        }
+
+        .skeuo-btn-orange:active::before {
+            /* 按下时中间光影保持不变 */
+            background: radial-gradient(circle at 25% 25%, #ffa070 0%, #ff7a4a 40%, #d04a1f 65%, #b04015 100%);
+            box-shadow:
+                inset -5px -5px 15px rgba(160,50,20,0.45),
+                inset -3px -3px 8px rgba(140,40,15,0.3),
+                inset -1px -1px 4px rgba(120,30,10,0.18),
+                inset 5px 5px 15px rgba(255,255,255,0.09),
+                inset 3px 3px 8px rgba(255,255,255,0.05);
+        }
+
+        .display-screen {
+            background: linear-gradient(180deg, #152515 0%, #0a150a 100%);
+            box-shadow:
+                /* 深内阴影 - 屏幕凹陷效果 */
+                inset 0 3px 8px rgba(0,0,0,0.9),
+                inset 0 1px 3px rgba(0,0,0,0.6),
+                inset 0 -1px 1px rgba(255,255,255,0.03),
+                /* 外阴影 - 屏幕边缘 */
+                0 1px 0 rgba(255,255,255,0.05),
+                0 -1px 0 rgba(0,0,0,0.3);
+            border: 1px solid #1a2a1a;
+            border-radius: 12px;
+        }
+        
+        .keypad-frame {
+            background: linear-gradient(180deg, #353535 0%, #2a2a2a 50%, #252525 100%);
+            box-shadow:
+                /* 主外阴影 - 光源左上，阴影右下 */
+                8px 8px 20px rgba(0,0,0,0.6),
+                4px 4px 10px rgba(0,0,0,0.4),
+                /* 顶部高光 */
+                inset 0 1px 0 rgba(255,255,255,0.1),
+                /* 内阴影 - 整体凹陷感 */
+                inset 0 3px 10px rgba(0,0,0,0.3);
+            border-radius: 24px;
+            border: 1px solid #3a3a3a;
+        }
+        
+        .screw {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+            box-shadow: 
+                inset 1px 1px 2px rgba(0,0,0,0.5),
+                0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+        }
+        
+        .screw::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 1px;
+            background: #222;
+        }
+        
+        .brand-text {
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center p-4">
+    
+    <div class="keypad-frame p-8 relative">
+        <!-- 螺丝装饰 -->
+        <div class="screw absolute top-4 left-4"></div>
+        <div class="screw absolute top-4 right-4"></div>
+        <div class="screw absolute bottom-4 left-4"></div>
+        <div class="screw absolute bottom-4 right-4"></div>
+        
+        <!-- 品牌文字 -->
+        <div class="text-center mb-6">
+            <span class="brand-text text-orange-500 text-xs tracking-widest">SECURE PAD</span>
+        </div>
+        
+        <!-- 显示屏区域 -->
+        <div class="display-screen rounded-2xl p-6 mb-6">
+            <!-- 数字显示 -->
+            <div class="text-center">
+                <span class="seven-segment text-green-400 text-5xl tracking-wider" id="display">______</span>
+            </div>
+        </div>
+        
+        <!-- 数字键盘 -->
+        <div class="grid grid-cols-3 gap-4 mb-4">
+            <button id="btn-1" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('1')"><span>1</span></button>
+            <button id="btn-2" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('2')"><span>2</span></button>
+            <button id="btn-3" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('3')"><span>3</span></button>
+            <button id="btn-4" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('4')"><span>4</span></button>
+            <button id="btn-5" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('5')"><span>5</span></button>
+            <button id="btn-6" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('6')"><span>6</span></button>
+            <button id="btn-7" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('7')"><span>7</span></button>
+            <button id="btn-8" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('8')"><span>8</span></button>
+            <button id="btn-9" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('9')"><span>9</span></button>
+
+            <!-- 回退键 -->
+            <button id="btn-back" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center" onclick="backspace()">
+                <span class="flex items-center justify-center">
+                    <svg class="w-6 h-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"/>
+                    </svg>
+                </span>
+            </button>
+
+            <button id="btn-0" class="skeuo-btn w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold" onclick="pressKey('0')"><span>0</span></button>
+
+            <!-- 回车确认键 -->
+            <button id="btn-ok" class="skeuo-btn-orange w-16 h-16 rounded-2xl flex items-center justify-center" onclick="confirm()">
+                <span class="flex items-center justify-center relative z-10">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </span>
+            </button>
+        </div>
+        
+        <!-- 提示文字 -->
+        <div class="text-center">
+            <span class="text-gray-500 text-xs tracking-wider">ENTER 6-DIGIT PIN</span>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '';
+        const maxLength = 6;
+        
+        function updateDisplay() {
+            if (isSubmitting) return;
+
+            const display = document.getElementById('display');
+
+            // 更新显示
+            if (currentInput.length === 0) {
+                display.textContent = '______';
+            } else {
+                display.textContent = currentInput.padEnd(maxLength, '_');
+            }
+        }
+        
+        function pressKey(num) {
+            if (currentInput.length < maxLength) {
+                currentInput += num;
+                updateDisplay();
+            }
+        }
+        
+        function backspace() {
+            if (currentInput.length > 0) {
+                currentInput = currentInput.slice(0, -1);
+                updateDisplay();
+            }
+        }
+        
+        let isSubmitting = false;
+
+        function confirm() {
+            if (isSubmitting) return;
+
+            isSubmitting = true;
+            const display = document.getElementById('display');
+
+            if (currentInput.length === maxLength) {
+                // 输入完成 - 显示绿色PASS
+                display.textContent = 'PASS';
+                display.classList.remove('text-green-400');
+                display.classList.add('text-green-500');
+            } else {
+                // 未完成 - 显示红色FAILED
+                display.textContent = 'FAILED';
+                display.classList.remove('text-green-400');
+                display.classList.add('text-red-500');
+            }
+
+            // 3秒后重置
+            setTimeout(() => {
+                currentInput = '';
+                isSubmitting = false;
+                display.classList.remove('text-green-500', 'text-red-500');
+                display.classList.add('text-green-400');
+                updateDisplay();
+            }, 3000);
+        }
+        
+        // 键盘支持
+        const keyButtonMap = {
+            '0': 'btn-0',
+            '1': 'btn-1',
+            '2': 'btn-2',
+            '3': 'btn-3',
+            '4': 'btn-4',
+            '5': 'btn-5',
+            '6': 'btn-6',
+            '7': 'btn-7',
+            '8': 'btn-8',
+            '9': 'btn-9',
+            'Backspace': 'btn-back',
+            'Enter': 'btn-ok'
+        };
+
+        const pressedKeys = new Set();
+
+        function pressButton(key) {
+            const btnId = keyButtonMap[key];
+            if (btnId) {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.classList.add('active');
+                }
+            }
+        }
+
+        function releaseButton(key) {
+            const btnId = keyButtonMap[key];
+            if (btnId) {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.classList.remove('active');
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (pressedKeys.has(e.key)) return;
+            pressedKeys.add(e.key);
+
+            if (e.key >= '0' && e.key <= '9') {
+                pressButton(e.key);
+                pressKey(e.key);
+            } else if (e.key === 'Backspace') {
+                pressButton('Backspace');
+                backspace();
+            } else if (e.key === 'Enter') {
+                pressButton('Enter');
+                confirm();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            pressedKeys.delete(e.key);
+            if (e.key >= '0' && e.key <= '9') {
+                releaseButton(e.key);
+            } else if (e.key === 'Backspace') {
+                releaseButton('Backspace');
+            } else if (e.key === 'Enter') {
+                releaseButton('Enter');
+            }
+        });
+
+        // 页面失去焦点时清除所有按下状态
+        window.addEventListener('blur', () => {
+            pressedKeys.clear();
+            document.querySelectorAll('.active').forEach(btn => btn.classList.remove('active'));
+        });
+    </script>
+</body>
+</html>
